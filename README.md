@@ -7,6 +7,7 @@ https://marsswap.finance - AMM and yield farm for synthetic tokens on Binance Sm
 ### BSCMAINNET
 
 - MARS Token - https://bscscan.com/token/
-- MasterChef - https://bscscan.com/address/
+- GovernorAlpha - https://bscscan.com/address/
+- MasterPlanet - https://bscscan.com/address/
 - Timelock - https://bscscan.com/address/
 - MultiCall - https://bscscan.com/address/

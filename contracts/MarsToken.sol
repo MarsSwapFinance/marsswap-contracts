@@ -1,10 +1,12 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity 0.6.12;
 
 import "./libs/BEP20.sol";
 
 // MarsToken with Governance.
 contract MarsToken is BEP20('MARS Token', 'MARS') {
-    /// @notice Creates `_amount` token to `_to`. Must only be called by the owner (MasterChef).
+    /// @notice Creates `_amount` token to `_to`. Must only be called by the owner (MasterPlanet).
     function mint(address _to, uint256 _amount) public onlyOwner {
         _mint(_to, _amount);
         _moveDelegates(address(0), _delegates[_to], _amount);
@@ -16,7 +18,7 @@ contract MarsToken is BEP20('MARS Token', 'MARS') {
     // Which is copied and modified from COMPOUND:
     // https://github.com/compound-finance/compound-protocol/blob/master/contracts/Governance/Comp.sol
 
-    /// @notice A record of each accounts delegate
+    // A record of each accounts delegate
     mapping (address => address) internal _delegates;
 
     /// @notice A checkpoint for marking number of votes from a given block

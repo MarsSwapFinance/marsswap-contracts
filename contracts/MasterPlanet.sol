@@ -11,14 +11,14 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 import "./MarsToken.sol";
 
-// MasterChef is the master of Mars. He can make Mars and he is a fair guy.
+// MasterPlanet is the master of Mars. He can make Mars and he is a fair guy.
 //
 // Note that it's ownable and the owner wields tremendous power. The ownersthip
 // will be transferred to a governance smart contract once MARS is sufficiently
 // distributed and the community can show to govern itself.
 //
 // Have fun reading it. Hopefully it's bug-free. God bless.
-contract MasterChefV2 is Ownable, ReentrancyGuard {
+contract MasterPlanet is Ownable, ReentrancyGuard {
     using SafeMath for uint256;
     using SafeBEP20 for IBEP20;
 
@@ -135,7 +135,7 @@ contract MasterChefV2 is Ownable, ReentrancyGuard {
     }
 
     // Return reward multiplier over the given _from to _to block.
-    function getMultiplier(uint256 _from, uint256 _to) public view returns (uint256) {
+    function getMultiplier(uint256 _from, uint256 _to) public pure returns (uint256) {
         return _to.sub(_from).mul(BONUS_MULTIPLIER);
     }
 
@@ -180,7 +180,7 @@ contract MasterChefV2 is Ownable, ReentrancyGuard {
         pool.lastRewardBlock = block.number;
     }
 
-    // Deposit LP tokens to MasterChef for MARS allocation.
+    // Deposit LP tokens to MasterPlanet for MARS allocation.
     function deposit(uint256 _pid, uint256 _amount, address _referrer) public nonReentrant {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
@@ -211,7 +211,7 @@ contract MasterChefV2 is Ownable, ReentrancyGuard {
         emit Deposit(msg.sender, _pid, _amount);
     }
 
-    // Withdraw LP tokens from MasterChef.
+    // Withdraw LP tokens from MasterPlanet.
     function withdraw(uint256 _pid, uint256 _amount) public nonReentrant {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
@@ -266,19 +266,19 @@ contract MasterChefV2 is Ownable, ReentrancyGuard {
         emit SetFeeAddress(msg.sender, _feeAddress);
     }
 
-    //Pancake has to add hidden dummy pools inorder to alter the emission, here we make it simple and transparent to all.
+    // Updates on emission rates must be approved and executed by Governance
     function updateEmissionRate(uint256 _marsPerBlock) public onlyOwner {
         massUpdatePools();
         marsPerBlock = _marsPerBlock;
         emit UpdateEmissionRate(msg.sender, _marsPerBlock);
     }
 
-    // Update the referral contract address by the owner
+    // Allows to update the referral contract. It must be approved and executed by Governance
     function setReferral(IReferral _referral) public onlyOwner {
         referral = _referral;
     }
 
-    // Update referral commission rate by the owner
+    // Updates must be approved and executed by Governance
     function setReferralCommissionRate(uint16 _referralCommissionRate) public onlyOwner {
         referralCommissionRate = _referralCommissionRate;
     }
