@@ -67,6 +67,8 @@ contract MasterPlanet is Ownable, ReentrancyGuard {
     uint256 public totalAllocPoint = 0;
     // The block number when MARS mining starts.
     uint256 public startBlock;
+    // Governance can approve the transfer of the ownership of the MARS token to a new version of MasterPlanet.
+    bool public ownsMars = true;
 
     // Referral contract address.
     IReferral public referral;
@@ -79,6 +81,7 @@ contract MasterPlanet is Ownable, ReentrancyGuard {
     event SetFeeAddress(address indexed user, address indexed newAddress);
     event SetDevAddress(address indexed user, address indexed newAddress);
     event UpdateEmissionRate(address indexed user, uint256 marsPerBlock);
+    event SafeMarsUpgrade(address indexed user, address indexed newMasterPlanet);
     event ReferralCommissionPaid(address indexed user, address indexed referrer, uint256 commissionAmount);
 
     constructor(
@@ -174,8 +177,14 @@ contract MasterPlanet is Ownable, ReentrancyGuard {
         }
         uint256 multiplier = getMultiplier(pool.lastRewardBlock, block.number);
         uint256 marsReward = multiplier.mul(marsPerBlock).mul(pool.allocPoint).div(totalAllocPoint);
-        mars.mint(devaddr, marsReward.div(10));
-        mars.mint(address(this), marsReward);
+        
+        // Minting new tokens is not possible after Governance has approved the ownership transfer of the MARS token
+        // Rewards would be stopped. This condition ensures that withdraws don't fail, so funds can always be taken out
+        if (ownsMars) {
+            mars.mint(devaddr, marsReward.div(10));
+            mars.mint(address(this), marsReward);
+        }
+
         pool.accMarsPerShare = pool.accMarsPerShare.add(marsReward.mul(1e12).div(lpSupply));
         pool.lastRewardBlock = block.number;
     }
@@ -218,7 +227,7 @@ contract MasterPlanet is Ownable, ReentrancyGuard {
         require(user.amount >= _amount, "withdraw: not good");
         updatePool(_pid);
         uint256 pending = user.amount.mul(pool.accMarsPerShare).div(1e12).sub(user.rewardDebt);
-        if (pending > 0) {
+        if (pending > 0 && ownsMars) {
             safeMarsTransfer(msg.sender, pending);
             payReferralCommission(msg.sender, pending);
         }
@@ -271,6 +280,16 @@ contract MasterPlanet is Ownable, ReentrancyGuard {
         massUpdatePools();
         marsPerBlock = _marsPerBlock;
         emit UpdateEmissionRate(msg.sender, _marsPerBlock);
+    }
+
+    // Governance can vote for transferring the ownership of the MARS token to a new version of MasterPlanet
+    // Existent LPs won't be migrated, is up to the users to move if they agree with the new contract
+    // Rewards would be stopped, but withdraws will keep working
+    function safeMarsUpgrade (address _newMasterPlanet) public onlyOwner {
+        require(address(_newMasterPlanet) != address(0), "safeMarsUpgrade: no new master planet");
+        ownsMars = false;
+        mars.transferOwnership(_newMasterPlanet);
+        emit SafeMarsUpgrade(msg.sender, _newMasterPlanet);
     }
 
     // Allows to update the referral contract. It must be approved and executed by Governance
